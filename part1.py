@@ -1,8 +1,3 @@
-# Programming languages
-# Project 3, Part 1
-# 5/5/2014
-# Kathleen Tully    tullyk  660461878
-# Charles Hathaway  hathac 
 import os, re, sys
 
 #traverses directories and files recursively
