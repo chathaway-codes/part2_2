@@ -2,11 +2,15 @@ package edu.rpi;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 
 public class Worker implements Runnable {
     private static final int A = Constants.A;
     private static final int Z = Constants.Z;
     private static final int numLetters = Constants.numLetters;
+    
+    public static HashMap<Thread, Runnable> workers = new HashMap<Thread, Runnable>();
+    private long start_time;
 
     private AccountCache[] accounts;
     private Account[] allAccounts;
@@ -60,6 +64,14 @@ public class Worker implements Runnable {
     }
 
     public void run() {
+    	// If I'm not in the list, add myself
+    	synchronized(this.workers) {
+			Thread meThread = Thread.currentThread();
+    		if(!workers.containsKey(meThread)) {
+    			workers.put(meThread, this);
+    			start_time = System.nanoTime();
+    		}
+    	}
         // tokenize transaction
         String[] commands = transaction.split(";");
 
@@ -124,14 +136,40 @@ public class Worker implements Runnable {
 				//  to try and close everything
 			}
 			
+			// Delay before running again
+			try {
+				Thread.sleep(e.delay/1000000);
+			} catch (InterruptedException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			
 	    	accounts = new AccountCache[allAccounts.length];
 	    	for(int i=0; i < allAccounts.length; i++) {
 	    		accounts[i] = new AccountCache(allAccounts[i], i);
 	    	}
+	    	
 			run();
 			return;
 		}
         
         //System.out.println("commit: " + transaction);
     }
+	
+	public Long getRemainingTime() {
+		long elapsed_time = System.nanoTime() - this.start_time;
+		// Easier counting, because I'm lazy
+		//  Total number of "operations", minus the amount of whitespace, minus the = sign
+		int counter=0;
+		for(char s : transaction.toCharArray()) {
+			if(s != ' ' && s != '=' && (s < '0' || (int)s > '9') && s != '+' && s != '-') {
+				counter++;
+			}
+		}
+		long total_time = counter*Account.delay*1000000;
+		long remainder_time = total_time - elapsed_time;
+		if(remainder_time > 0)
+			return remainder_time;
+		return 0L;
+	}
 }

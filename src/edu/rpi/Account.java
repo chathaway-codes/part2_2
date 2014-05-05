@@ -46,7 +46,7 @@ public class Account {
             if (value != expectedValue) {
                 // somebody else modified value since we used it;
                 // will have to retry
-                throw new TransactionAbortException();
+                throw new TransactionAbortException(0);
             }
         }
     }
@@ -78,7 +78,10 @@ public class Account {
                         || (numReaders == 1 && !readers.contains(self))) {
                     // encountered conflict with another transaction;
                     // will have to retry
-                    throw new TransactionAbortException();
+                	long time = 0;
+                	if(writer != null)
+                		time = ((Worker)Worker.workers.get(writer)).getRemainingTime();
+                    throw new TransactionAbortException(time);
                 }
                 writer = self;
             } else {
@@ -88,7 +91,9 @@ public class Account {
                 if (writer != null) {
                     // encountered conflict with another transaction;
                     // will have to retry
-                    throw new TransactionAbortException();
+                	// See how long the writer needs to abort
+                	long time = ((Worker)Worker.workers.get(writer)).getRemainingTime();
+                    throw new TransactionAbortException(time);
                 }
                 readers.add(Thread.currentThread());
             }
