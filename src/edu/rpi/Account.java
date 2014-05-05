@@ -2,7 +2,7 @@ package edu.rpi;
 
 import java.util.HashSet;
 
-class Account {
+public class Account {
     private int value = 0;
     private Thread writer = null;
     private HashSet<Thread> readers;

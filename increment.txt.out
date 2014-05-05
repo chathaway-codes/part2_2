@@ -1,0 +1,53 @@
+commit: A = A + 1
+commit: B = B + 1
+commit: C = C + 1
+commit: D = D + 1
+commit: E = E + 1
+commit: F = F + 1
+commit: G = G + 1
+commit: H = H + 1
+commit: I = I + 1
+commit: J = J + 1
+commit: K = K + 1
+commit: L = L + 1
+commit: M = M + 1
+commit: N = N + 1
+commit: O = O + 1
+commit: P = P + 1
+commit: Q = Q + 1
+commit: R = R + 1
+commit: S = S + 1
+commit: T = T + 1
+commit: U = U + 1
+commit: V = V + 1
+commit: W = W + 1
+commit: X = X + 1
+commit: Y = Y + 1
+commit: Z = Z + 1
+final values:
+    00 A:          26 (00)
+    01 B:          25 (25)
+    02 C:          24 (24)
+    03 D:          23 (23)
+    04 E:          22 (22)
+    05 F:          21 (21)
+    06 G:          20 (20)
+    07 H:          19 (19)
+    08 I:          18 (18)
+    09 J:          17 (17)
+    10 K:          16 (16)
+    11 L:          15 (15)
+    12 M:          14 (14)
+    13 N:          13 (13)
+    14 O:          12 (12)
+    15 P:          11 (11)
+    16 Q:          10 (10)
+    17 R:           9 (09)
+    18 S:           8 (08)
+    19 T:           7 (07)
+    20 U:           6 (06)
+    21 V:           5 (05)
+    22 W:           4 (04)
+    23 X:           3 (03)
+    24 Y:           2 (02)
+    25 Z:           1 (01)

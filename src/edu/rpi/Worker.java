@@ -1,11 +1,15 @@
 package edu.rpi;
 
-class Worker {
+import java.util.ArrayList;
+import java.util.Collections;
+
+public class Worker implements Runnable {
     private static final int A = Constants.A;
     private static final int Z = Constants.Z;
     private static final int numLetters = Constants.numLetters;
 
-    private Account[] accounts;
+    private AccountCache[] accounts;
+    private Account[] allAccounts;
     private String transaction;
 
     // TO DO: The sequential version of Worker peeks at accounts
@@ -18,7 +22,11 @@ class Worker {
     // (3) perform all updates, and (4) close all opened accounts.
 
     public Worker(Account[] allAccounts, String trans) {
-        accounts = allAccounts;
+    	this.allAccounts = allAccounts;
+    	accounts = new AccountCache[allAccounts.length];
+    	for(int i=0; i < allAccounts.length; i++) {
+    		accounts[i] = new AccountCache(allAccounts[i], i);
+    	}
         transaction = trans;
     }
     
@@ -26,15 +34,15 @@ class Worker {
     // You probably want to change it to return a reference to an
     // account *cache* instead.
     //
-    private Account parseAccount(String name) {
+    private AccountCache parseAccount(String name) {
         int accountNum = (int) (name.charAt(0)) - (int) 'A';
         if (accountNum < A || accountNum > Z)
             throw new InvalidTransactionError();
-        Account a = accounts[accountNum];
+        AccountCache a = accounts[accountNum];
         for (int i = 1; i < name.length(); i++) {
             if (name.charAt(i) != '*')
                 throw new InvalidTransactionError();
-            accountNum = (accounts[accountNum].peek() % numLetters);
+            accountNum = (accounts[accountNum].getValue() % numLetters);
             a = accounts[accountNum];
         }
         return a;
@@ -45,7 +53,8 @@ class Worker {
         if (name.charAt(0) >= '0' && name.charAt(0) <= '9') {
             rtn = new Integer(name).intValue();
         } else {
-            rtn = parseAccount(name).peek();
+        	AccountCache account = parseAccount(name);
+            rtn = parseAccount(name).getValue();
         }
         return rtn;
     }
@@ -58,26 +67,71 @@ class Worker {
             String[] words = commands[i].trim().split("\\s");
             if (words.length < 3)
                 throw new InvalidTransactionError();
-            Account lhs = parseAccount(words[0]);
+            AccountCache lhs = parseAccount(words[0]);
             if (!words[1].equals("="))
                 throw new InvalidTransactionError();
             int rhs = parseAccountOrNum(words[2]);
             for (int j = 3; j < words.length; j+=2) {
-                if (words[j].equals("+"))
+                if (words[j].equals("+")) {
                     rhs += parseAccountOrNum(words[j+1]);
-                else if (words[j].equals("-"))
+                }
+                else if (words[j].equals("-")) {
                     rhs -= parseAccountOrNum(words[j+1]);
+                }
                 else
                     throw new InvalidTransactionError();
             }
-            try {
-                lhs.open(true);
-            } catch (TransactionAbortException e) {
-                // won't happen in sequential version
-            }
-            lhs.update(rhs);
-            lhs.close();
+            
+            lhs.setValue(rhs);
+            //System.out.println("Updated " + words[0] + " equal tp " + lhs.getValue());
         }
+        
+        // Remove all unimportant things, then sort
+        ArrayList<AccountCache> caches = new ArrayList<AccountCache>();
+        for(AccountCache account : accounts) {
+        	if(!account.action.equals("Y")) {
+        		continue;
+        	}
+        	caches.add(account);
+        }
+    	Collections.sort(caches);
+    	
+		try {
+	    	// Open all accounts
+	    	for(AccountCache account : caches) {
+	    		account.open();
+	    	}
+	    	// Commit all changes
+	    	for(AccountCache account : caches) {
+	    		account.commit();
+	    	}
+	    	// Close
+	    	for(AccountCache account : caches) {
+	    		account.close();
+	    	}
+		} catch (TransactionAbortException e) {
+			// If we get here, it means we couldn't open something
+			//  OR something was changed from when we peaked at it 
+			//    until we opened
+			
+			// Make sure to close all accounts
+			try {
+				for(AccountCache account : caches) {
+					account.close();
+				}
+			} catch (TransactionUsageError ex) {
+				// This means the account was never opened; we just to make sure
+				//  to try and close everything
+			}
+			
+	    	accounts = new AccountCache[allAccounts.length];
+	    	for(int i=0; i < allAccounts.length; i++) {
+	    		accounts[i] = new AccountCache(allAccounts[i], i);
+	    	}
+			run();
+			return;
+		}
+        
         System.out.println("commit: " + transaction);
     }
 }
