@@ -17,6 +17,7 @@ public class Server {
     private static final int Z = Constants.Z;
     private static final int numLetters = Constants.numLetters;
     private static Account[] accounts;
+    public static boolean verbose = true;
 
     private static void dumpAccounts() {
         // output values:
@@ -62,14 +63,14 @@ public class Server {
           Thread.currentThread().interrupt();
         }
     }
-
-    public static void main (String args[])
-        throws IOException, NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-
-        // read transactions from input file
-        String line;
+    
+    public static void auto(String []args) throws IOException, NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+    	if(args.length != 2)
+    		return;
+    	verbose = false;
+    	String line;
         BufferedReader input =
-            new BufferedReader(new FileReader(args[0]));
+            new BufferedReader(new FileReader(args[1]));
         
         ArrayList<String> lines = new ArrayList<String>();
 
@@ -110,28 +111,44 @@ public class Server {
                 System.out.println(out);
         	}
         }
-//        
-//        ExecutorService executor = Executors.newFixedThreadPool(1);
-//        ArrayList<Worker> workers = new ArrayList<Worker>();
+    }
+
+    public static void main (String args[])
+        throws IOException, NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+        // read transactions from input file
+    	if(args.length == 2 && args[0].equals("--auto")) {
+    		auto(args);
+    		return;
+    	}
+        String line;
+        BufferedReader input =
+            new BufferedReader(new FileReader(args[0]));
+        
+        ArrayList<String> lines = new ArrayList<String>();
+        ExecutorService executor = Executors.newFixedThreadPool(10);
+        ArrayList<Worker> workers = new ArrayList<Worker>();
+        accounts = Server.genAccounts();
 
 // TO DO: you will need to create an Executor and then modify the
 // following loop to feed tasks to the executor instead of running them
 // directly.  Don't modify the initialization of accounts above, or the
 // output at the end.
 
-//        while ((line = input.readLine()) != null) {
-//        	workers.add(new Worker(accounts, line));
-//        }
-//        
-//        // Start timing things
-//        long startTime = System.nanoTime();
-//        
-//        run(executor, workers.toArray(new Worker[1]));
-//        
-//        long endTime = System.nanoTime();
-//
-//        System.out.println("final values:");
-//        dumpAccounts();
-//        System.out.println("Elapsed time: " + ((endTime-startTime)*1.0e-6) + " ms");
+        while ((line = input.readLine()) != null) {
+        	workers.add(new Worker(accounts, line));
+        }
+        
+        input.close();
+        
+        // Start timing things
+        long startTime = System.nanoTime();
+        
+        run(executor, workers.toArray(new Worker[1]));
+        
+        long endTime = System.nanoTime();
+
+        System.out.println("final values:");
+        dumpAccounts();
+        System.out.println("Elapsed time: " + ((endTime-startTime)*1.0e-6) + " ms");
     }
 }

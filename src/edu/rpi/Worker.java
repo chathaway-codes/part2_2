@@ -153,7 +153,8 @@ public class Worker implements Runnable {
 			return;
 		}
         
-        //System.out.println("commit: " + transaction);
+		if(Server.verbose)
+			System.out.println("commit: " + transaction);
     }
 	
 	public Long getRemainingTime() {
