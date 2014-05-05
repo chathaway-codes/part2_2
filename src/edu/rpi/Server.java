@@ -2,10 +2,13 @@ package edu.rpi;
 
 import java.io.*;
 import java.lang.Thread.*;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 
@@ -61,30 +64,74 @@ public class Server {
     }
 
     public static void main (String args[])
-        throws IOException {
-        accounts = genAccounts();
+        throws IOException, NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 
         // read transactions from input file
         String line;
         BufferedReader input =
             new BufferedReader(new FileReader(args[0]));
-        ExecutorService executor = Executors.newCachedThreadPool();
-        ArrayList<Worker> workers = new ArrayList<Worker>();
+        
+        ArrayList<String> lines = new ArrayList<String>();
+
+        while ((line = input.readLine()) != null) {
+        	lines.add(line);
+        }
+        
+        input.close();
+        
+        long []delays = new long[]{100, 50, 200};
+        String []commands = new String[]{"newFixedThreadPool", "newFixedThreadPool", "newFixedThreadPool", "newFixedThreadPool", "newCachedThreadPool"};
+        Object [][]arguments = new Object[][]{{26}, {10}, {6}, {1}, {}};
+        Method []threadPoolMethods = new Method[]{Executors.class.getDeclaredMethod("newFixedThreadPool", Integer.TYPE), 
+        		Executors.class.getDeclaredMethod("newFixedThreadPool", Integer.TYPE), 
+        		Executors.class.getDeclaredMethod("newFixedThreadPool", Integer.TYPE), 
+        		Executors.class.getDeclaredMethod("newFixedThreadPool", Integer.TYPE),
+        		Executors.class.getDeclaredMethod("newCachedThreadPool")};
+        //ExecutorService []executors = new ExecutorService[]{Executors.newCachedThreadPool(),Executors.newFixedThreadPool(1), Executors.newFixedThreadPool(6), Executors.newFixedThreadPool(10)};
+        
+        for(Long delay : delays) {
+        	Account.delay = delay;
+        	for(int i=0; i < threadPoolMethods.length; i++) {
+        		ExecutorService executor = (ExecutorService) threadPoolMethods[i].invoke(null, arguments[i]);
+                ArrayList<Worker> workers = new ArrayList<Worker>();
+                Account []accounts = Server.genAccounts();
+                for(String l : lines) {
+                	workers.add(new Worker(accounts, l));
+                }
+                
+                long startTime = System.nanoTime();
+                
+                run(executor, workers.toArray(new Worker[1]));
+                
+                long endTime = System.nanoTime();
+                
+                String out = String.format("%s(%d threads) (%d delay): %f ms execution time", commands[i], ((ThreadPoolExecutor)executor).getCorePoolSize(), delay, ((endTime-startTime)*1.0e-6));
+                
+                System.out.println(out);
+        	}
+        }
+//        
+//        ExecutorService executor = Executors.newFixedThreadPool(1);
+//        ArrayList<Worker> workers = new ArrayList<Worker>();
 
 // TO DO: you will need to create an Executor and then modify the
 // following loop to feed tasks to the executor instead of running them
 // directly.  Don't modify the initialization of accounts above, or the
 // output at the end.
 
-        while ((line = input.readLine()) != null) {
-        	workers.add(new Worker(accounts, line));
-        }
-        
-        input.close();
-        
-        run(executor, workers.toArray(new Worker[1]));
-
-        System.out.println("final values:");
-        dumpAccounts();
+//        while ((line = input.readLine()) != null) {
+//        	workers.add(new Worker(accounts, line));
+//        }
+//        
+//        // Start timing things
+//        long startTime = System.nanoTime();
+//        
+//        run(executor, workers.toArray(new Worker[1]));
+//        
+//        long endTime = System.nanoTime();
+//
+//        System.out.println("final values:");
+//        dumpAccounts();
+//        System.out.println("Elapsed time: " + ((endTime-startTime)*1.0e-6) + " ms");
     }
 }

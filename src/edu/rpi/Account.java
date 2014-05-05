@@ -6,6 +6,7 @@ public class Account {
     private int value = 0;
     private Thread writer = null;
     private HashSet<Thread> readers;
+    public static long delay = 100;
 
     public Account(int initialValue) {
         value = initialValue;
@@ -14,7 +15,7 @@ public class Account {
 
     private void delay() {
         try {
-            Thread.sleep(100);  // ms
+            Thread.sleep(delay);  // ms
         } catch(InterruptedException e) {}
             // Java requires you to catch that
     }

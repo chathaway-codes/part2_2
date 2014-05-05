@@ -132,6 +132,6 @@ public class Worker implements Runnable {
 			return;
 		}
         
-        System.out.println("commit: " + transaction);
+        //System.out.println("commit: " + transaction);
     }
 }
