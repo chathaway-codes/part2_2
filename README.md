@@ -3,6 +3,25 @@ CSCI-6969 Programming Languages, Project 3.2
 
 ***Charles Hathaway, Kathleen Tully***
 
+Running
+-------
+
+To run this program, do the following:
+
+```
+charles@vanguard:~/Programming/part2_2$ cd
+charles@vanguard:~$ cd Programming/part2_2/
+charles@vanguard:~/Programming/part2_2$ java -classpath bin/ edu.rpi.Server rotate.txt
+```
+
+In addition to supporting the required running, we also have a system to automatically run an input file through multiple configurations.
+To run it, execute the following:
+
+```
+charles@vanguard:~/Programming/part2_2$ java -classpath bin/ edu.rpi.Server --auto rotate.txt
+```
+
+This will NOT output the "commit" line, but will output a line with run information after each configurations terminates.
 
 Bonus Problem 1.
 ----------------
